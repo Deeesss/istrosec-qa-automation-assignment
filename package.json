@@ -1,0 +1,21 @@
+{
+  "name": "istrosec-qa-automation-assignment",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Local Playwright and TypeScript solution for the IstroSec QA Automation Engineer technical assignment.",
+  "license": "UNLICENSED",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "test": "playwright test",
+    "test:headed": "playwright test --headed",
+    "test:debug": "playwright test --debug",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.62.0",
+    "@types/node": "20.19.43",
+    "typescript": "6.0.3"
+  }
+}
