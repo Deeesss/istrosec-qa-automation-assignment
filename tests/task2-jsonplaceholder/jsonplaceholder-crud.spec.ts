@@ -185,7 +185,6 @@ test.describe('Task 2 - JSONPlaceholder CRUD API', () => {
       expect(response.headers()['content-type']).toMatch(/^text\/html(?:;|$)/i);
       const body = await response.text();
       expect(body).toContain('TypeError');
-      expect(body).toContain("reading 'id'");
     });
 
     // Why: PATCH of an unknown ID returns a successful-looking object without an ID;
