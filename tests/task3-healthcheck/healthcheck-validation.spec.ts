@@ -224,6 +224,38 @@ test.describe('Task 3 - Agent healthcheck validation', () => {
     });
   });
 
+  // Why: The assignment requires a bare 8-4-4-4-12 identifier. Accepting an
+  // urn:uuid prefix would let an agent use a different identifier grammar than
+  // the backend's enrollment and lookup keys.
+  test('rejects a URN-prefixed agent_id UUID', async ({ request }) => {
+    const payload = createValidHealthcheckPayload({
+      agent_id: 'urn:uuid:BF5D99A1-624D-4B6D-8B1B-5D66B23D12D7',
+    });
+
+    const response = await postHealthcheck(request, payload);
+
+    await expectValidationError(response, {
+      instancePath: '/agent_id',
+      keyword: 'pattern',
+    });
+  });
+
+  // Why: system_product_uuid correlates the agent with hardware inventory. A URN
+  // wrapper must not create a second textual identity for the same bare UUID value.
+  test('rejects a URN-prefixed system_product_uuid', async ({ request }) => {
+    const payload = createValidHealthcheckPayload({
+      system_product_uuid:
+        'urn:uuid:4A114D56-62E0-8B0B-594A-6618D15F8385',
+    });
+
+    const response = await postHealthcheck(request, payload);
+
+    await expectValidationError(response, {
+      instancePath: '/system_product_uuid',
+      keyword: 'pattern',
+    });
+  });
+
   // Why: Boot time must use one unambiguous UTC clock. Accepting an offset instead
   // of the required Z suffix could make reboot and persistence timelines inconsistent.
   test('rejects last_boot_time without the required UTC Z suffix', async ({ request }) => {
@@ -390,6 +422,41 @@ test.describe('Task 3 - Agent healthcheck validation', () => {
       instancePath: '/session_info/0',
       keyword: 'required',
       params: { missingProperty: 'account_sid' },
+    });
+  });
+
+  // Why: A JSON primitive is syntactically valid JSON but cannot carry any required
+  // healthcheck fields. It must reach the schema validator and use the same JSON
+  // error contract as a malformed object rather than leaking an HTML parser page.
+  test('rejects a JSON primitive through the validation error contract', async ({
+    request,
+  }) => {
+    const response = await request.post(healthcheckUrl, {
+      headers: { 'Content-Type': 'application/json' },
+      data: '123',
+    });
+
+    await expectValidationError(response, {
+      instancePath: '',
+      keyword: 'type',
+    });
+  });
+
+  // Why: Broken JSON can originate from a truncated or compromised agent request.
+  // Returning a controlled JSON error prevents an Express stack trace from crossing
+  // the API boundary and keeps client error handling deterministic.
+  test('returns a controlled JSON error for malformed JSON syntax', async ({
+    request,
+  }) => {
+    const response = await request.post(healthcheckUrl, {
+      headers: { 'Content-Type': 'application/json' },
+      data: Buffer.from('{"agent_id":'),
+    });
+
+    await expectValidationError(response, {
+      instancePath: '',
+      keyword: 'parse',
+      message: 'must contain valid JSON',
     });
   });
 });

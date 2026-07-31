@@ -39,6 +39,9 @@ const utcTimestampSchema = {
   pattern: 'Z$',
 } as const;
 
+const bareUuidPattern =
+  '^[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}$';
+
 export const healthcheckSchema: JSONSchemaType<HealthcheckPayload> = {
   type: 'object',
   additionalProperties: false,
@@ -61,6 +64,7 @@ export const healthcheckSchema: JSONSchemaType<HealthcheckPayload> = {
     agent_id: {
       type: 'string',
       format: 'uuid',
+      pattern: bareUuidPattern,
     },
     base_board_sn: {
       type: 'string',
@@ -72,6 +76,7 @@ export const healthcheckSchema: JSONSchemaType<HealthcheckPayload> = {
     system_product_uuid: {
       type: 'string',
       format: 'uuid',
+      pattern: bareUuidPattern,
     },
     os_name: {
       type: 'string',

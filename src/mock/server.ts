@@ -3,7 +3,7 @@ import type { Server } from 'node:http';
 
 import Ajv from 'ajv';
 import addFormats from 'ajv-formats';
-import express, { type Express } from 'express';
+import express, { type ErrorRequestHandler, type Express } from 'express';
 
 import { healthcheckSchema, type HealthcheckPayload } from './healthcheck-schema';
 
@@ -41,9 +41,42 @@ ajv.addFormat('ip-address', {
 
 const validateHealthcheck = ajv.compile<HealthcheckPayload>(healthcheckSchema);
 
+function isJsonParseError(error: unknown): error is SyntaxError & { type: string } {
+  return (
+    error instanceof SyntaxError &&
+    'type' in error &&
+    error.type === 'entity.parse.failed'
+  );
+}
+
+const handleJsonParseError: ErrorRequestHandler = (
+  error,
+  _request,
+  response,
+  next,
+) => {
+  if (!isJsonParseError(error)) {
+    next(error);
+    return;
+  }
+
+  response.status(400).json({
+    status: 'error',
+    errors: [
+      {
+        instancePath: '',
+        schemaPath: '#',
+        keyword: 'parse',
+        params: {},
+        message: 'must contain valid JSON',
+      },
+    ],
+  });
+};
+
 export function createHealthcheckApp(): Express {
   const app = express();
-  app.use(express.json());
+  app.use(express.json({ strict: false }));
 
   app.post(HEALTHCHECK_PATH, (request, response) => {
     if (validateHealthcheck(request.body)) {
@@ -55,6 +88,8 @@ export function createHealthcheckApp(): Express {
       errors: validateHealthcheck.errors ?? [],
     });
   });
+
+  app.use(handleJsonParseError);
 
   return app;
 }
