@@ -21,8 +21,8 @@ function inventoryList(page: Page) {
 }
 
 test.describe('Task 4A - SauceDemo UI authentication', () => {
-  // Why: A valid user must reach both the protected route and its real inventory
-  // content; checking only the URL could miss a login shell rendered at that path.
+  // Logs in with valid credentials.
+  // Checks that the inventory page and its content are visible.
   test('allows a valid user to access the protected inventory', async ({ page }) => {
     await submitLogin(page, VALID_USERNAME, VALID_PASSWORD);
 
@@ -32,8 +32,8 @@ test.describe('Task 4A - SauceDemo UI authentication', () => {
     await expect(page.getByRole('button', { name: 'Open Menu' })).toBeVisible();
   });
 
-  // Why: Invalid credentials must not create an authenticated session or expose
-  // inventory data, while the visible error tells the user that access was denied.
+  // Logs in with an incorrect password.
+  // Checks that login fails and the inventory is not displayed.
   test('rejects invalid credentials without exposing protected content', async ({
     page,
   }) => {
@@ -50,8 +50,8 @@ test.describe('Task 4A - SauceDemo UI authentication', () => {
     await expect(inventoryList(page)).toHaveCount(0);
   });
 
-  // Why: A locked account is an explicit server-side access decision and must stay
-  // distinguishable from a typo so operators can investigate or unlock the account.
+  // Tries to log in with a locked user.
+  // Checks that the correct locked-account message is displayed.
   test('denies the locked user with the locked-account message', async ({ page }) => {
     await submitLogin(page, 'locked_out_user', VALID_PASSWORD);
 
@@ -65,9 +65,8 @@ test.describe('Task 4A - SauceDemo UI authentication', () => {
     await expect(inventoryList(page)).toHaveCount(0);
   });
 
-  // Why: Typing a protected URL must not bypass authentication. Redirecting to
-  // the login route while withholding inventory proves access is denied before
-  // protected content becomes usable.
+  // Opens the inventory URL without logging in.
+  // Checks that the user is returned to login and cannot see the inventory.
   test('blocks direct anonymous access to the protected inventory URL', async ({
     page,
   }) => {
@@ -84,8 +83,8 @@ test.describe('Task 4A - SauceDemo UI authentication', () => {
     await expect(inventoryList(page)).toHaveCount(0);
   });
 
-  // Why: Logout must invalidate the existing session, not merely navigate away.
-  // Reopening the protected URL proves that the former session cannot be replayed.
+  // Logs in and then logs out.
+  // Checks that the inventory cannot be opened again after logout.
   test('ends the session on logout and blocks a protected revisit', async ({ page }) => {
     await submitLogin(page, VALID_USERNAME, VALID_PASSWORD);
     await expect(inventoryList(page)).toBeVisible();

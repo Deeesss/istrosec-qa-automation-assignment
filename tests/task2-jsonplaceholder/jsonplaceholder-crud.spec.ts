@@ -22,8 +22,8 @@ async function expectJsonResponse(
 
 test.describe('Task 2 - JSONPlaceholder CRUD API', () => {
   test.describe('GET /posts', () => {
-    // Why: Collection consumers require a predictable array of complete posts;
-    // returning a partial or differently shaped collection would break list processing.
+    // Checks that the endpoint returns all posts with the expected fields
+    // and that every returned value has the correct type and is not empty.
     test('returns the complete post collection', async ({ request }) => {
       const response = await request.get(POSTS_URL);
       const body = await expectJsonResponse(response, 200);
@@ -47,8 +47,8 @@ test.describe('Task 2 - JSONPlaceholder CRUD API', () => {
       ).toBe(true);
     });
 
-    // Why: Fetching a known identifier must return the matching resource rather
-    // than an arbitrary collection item, otherwise callers can act on the wrong post.
+    // Gets an existing post by ID.
+    // Checks the ID, title and body in the response.
     test('returns one existing post by identifier', async ({ request }) => {
       const response = await request.get(`${POSTS_URL}/${EXISTING_POST_ID}`);
       const body = await expectJsonResponse(response, 200);
@@ -61,8 +61,8 @@ test.describe('Task 2 - JSONPlaceholder CRUD API', () => {
       });
     });
 
-    // Why: A missing identifier must be distinguishable from an existing post so
-    // clients do not treat an empty object as valid business data.
+    // Sends a GET request for a post that does not exist.
+    // Checks that the API returns 404 and an empty JSON object.
     test('returns 404 and an empty JSON object for an unknown identifier', async ({
       request,
     }) => {
@@ -74,8 +74,8 @@ test.describe('Task 2 - JSONPlaceholder CRUD API', () => {
   });
 
   test.describe('POST /posts', () => {
-    // Why: The create response must echo the submitted fields and assign an ID,
-    // while a follow-up GET proves that this fake API did not persist the resource.
+    // Creates a post and checks the returned fields and generated ID.
+    // A following GET confirms that the fake API did not really save it.
     test('simulates creation for a valid JSON payload without persisting it', async ({
       request,
     }) => {
@@ -94,9 +94,8 @@ test.describe('Task 2 - JSONPlaceholder CRUD API', () => {
       expect(followUpBody).toEqual({});
     });
 
-    // Why: The assignment asks about required fields, but this public fake API has
-    // no post schema validation; documenting acceptance prevents a false claim that
-    // our tests proved server-side validation that does not exist.
+    // Sends an incomplete post and confirms that JSONPlaceholder accepts it
+    // because this fake API does not enforce required post fields.
     test('accepts an incomplete JSON payload because required fields are not enforced', async ({
       request,
     }) => {
@@ -110,8 +109,8 @@ test.describe('Task 2 - JSONPlaceholder CRUD API', () => {
       expect(body).not.toHaveProperty('userId');
     });
 
-    // Why: A client that declares text/plain sends data the server does not parse;
-    // the 201 status alone would hide that every submitted post field was discarded.
+    // Sends the post data as text/plain instead of JSON.
+    // Checks that the API returns 201 but ignores all post fields.
     test('drops post fields when the request Content-Type is text/plain', async ({
       request,
     }) => {
@@ -132,8 +131,8 @@ test.describe('Task 2 - JSONPlaceholder CRUD API', () => {
   });
 
   test.describe('PUT/PATCH /posts/:id', () => {
-    // Why: PUT represents full replacement, so the response must contain the exact
-    // complete representation supplied by the caller, including the route identity.
+    // Replaces the whole existing post with PUT.
+    // Checks that the API returns exactly the new post data.
     test('returns the full replacement for PUT of an existing post', async ({ request }) => {
       const replacement: Post = {
         id: EXISTING_POST_ID,
@@ -150,8 +149,8 @@ test.describe('Task 2 - JSONPlaceholder CRUD API', () => {
       expect(body).toEqual(replacement);
     });
 
-    // Why: PATCH must change only the supplied field. Losing the original body or
-    // owner during a partial update would silently corrupt unrelated post data.
+    // Uses PATCH to change only the title and checks that
+    // the original ID, userId and body remain unchanged.
     test('merges a partial PATCH into an existing post response', async ({ request }) => {
       const originalResponse = await request.get(`${POSTS_URL}/${EXISTING_POST_ID}`);
       const originalBody = (await expectJsonResponse(originalResponse, 200)) as Post;
@@ -165,8 +164,8 @@ test.describe('Task 2 - JSONPlaceholder CRUD API', () => {
       expect(patchedBody).toEqual({ ...originalBody, ...patch });
     });
 
-    // Why: PUT against an unknown ID currently exposes a server error and HTML stack
-    // trace. Capturing that behavior prevents us from pretending it is a clean 404.
+    // Sends PUT to a post that does not exist and records
+    // the current 500 HTML TypeError returned by JSONPlaceholder.
     test('returns the current 500 HTML error for PUT of an unknown post', async ({
       request,
     }) => {
@@ -187,8 +186,8 @@ test.describe('Task 2 - JSONPlaceholder CRUD API', () => {
       expect(body).toContain('TypeError');
     });
 
-    // Why: PATCH of an unknown ID returns a successful-looking object without an ID;
-    // the follow-up 404 proves it was not created and prevents false upsert semantics.
+    // Sends PATCH to a post that does not exist. The API echoes the data,
+    // but a following GET confirms that no new post was created.
     test('echoes PATCH data for an unknown post without creating a resource', async ({
       request,
     }) => {
@@ -208,9 +207,8 @@ test.describe('Task 2 - JSONPlaceholder CRUD API', () => {
   });
 
   test.describe('DELETE /posts/:id', () => {
-    // Why: JSONPlaceholder acknowledges deletion but does not persist it. Proving
-    // the post is still readable prevents a 200 response from being misreported as
-    // evidence that a database record was actually removed.
+    // Deletes an existing post and checks the successful empty response.
+    // A following GET confirms that the fake API did not really delete it.
     test('simulates deletion while leaving the existing post available', async ({
       request,
     }) => {
@@ -228,8 +226,8 @@ test.describe('Task 2 - JSONPlaceholder CRUD API', () => {
       });
     });
 
-    // Why: Deleting an unknown ID returns the same success response as deleting an
-    // existing one, so clients cannot use this response to prove prior existence.
+    // Deletes a post that does not exist and confirms that the API
+    // still returns the same 200 response with an empty JSON object.
     test('returns the same empty success response for an unknown post', async ({
       request,
     }) => {

@@ -60,8 +60,8 @@ test.describe('Task 1 - React Admin customer management', () => {
     await login(page);
   });
 
-  // Why: Operators must be able to narrow a large customer set without silently
-  // keeping unrelated records that could lead to editing the wrong account.
+  // Filters the customer list using a name already visible in the table.
+  // Checks that the filter is applied and fewer customer rows are displayed.
   test('filters the customer list by a visible customer name', async ({ page }) => {
     await openCustomers(page);
     const rows = customerRows(page);
@@ -86,8 +86,8 @@ test.describe('Task 1 - React Admin customer management', () => {
     await expect.poll(() => rows.count()).toBeLessThan(initialRowCount);
   });
 
-  // Why: A sort control is only trustworthy when both its state and the rendered
-  // data order change together; a cosmetic arrow alone can hide incorrect ordering.
+  // Sorts customer last names in ascending and descending order.
+  // Checks both the selected sort settings and the displayed name order.
   test('sorts customer names in ascending and descending order', async ({ page }) => {
     await openCustomers(page);
 
@@ -122,8 +122,8 @@ test.describe('Task 1 - React Admin customer management', () => {
     expect(descendingLastNames).toEqual([...descendingLastNames].sort().reverse());
   });
 
-  // Why: Pagination must advance the data window as well as the page indicator;
-  // otherwise operators can believe they reviewed records that were never displayed.
+  // Opens the second page of customers.
+  // Checks that the page number and displayed customer data both change.
   test('moves from the first customer page to the second data page', async ({ page }) => {
     await openCustomers(page);
     const firstPageFirstCustomer = await customerRows(page)
@@ -149,8 +149,8 @@ test.describe('Task 1 - React Admin customer management', () => {
     expect(secondPageFirstCustomer).not.toBe(firstPageFirstCustomer);
   });
 
-  // Why: A missing last name must block creation because the list and edit views
-  // use the customer's full name as the primary human-readable identity.
+  // Tries to create a customer without the required last name.
+  // Checks that the form shows validation errors and is not submitted.
   test('rejects a customer form with a missing required last name', async ({ page }) => {
     await page.goto(`${CUSTOMERS_URL}/create`);
     await page.getByRole('textbox', { name: 'First name' }).fill('Validation');
@@ -168,8 +168,8 @@ test.describe('Task 1 - React Admin customer management', () => {
     await expect(page).toHaveURL(`${CUSTOMERS_URL}/create`);
   });
 
-  // Why: Successful submission must expose the saved identity on the resulting
-  // edit page so the operator can verify which customer record was created.
+  // Creates a new customer with valid data.
+  // Checks that the saved values are displayed on the customer page.
   test('creates a customer and shows the persisted form values', async ({ page }) => {
     const customer = {
       firstName: 'Istrosec',
@@ -189,8 +189,8 @@ test.describe('Task 1 - React Admin customer management', () => {
     await expect(page.getByRole('textbox', { name: 'Email' })).toHaveValue(customer.email);
   });
 
-  // Why: The demo has no explicit Cancel button, so leaving the edit route is its
-  // cancel equivalent; unsaved values must not leak into the stored customer record.
+  // Changes a customer value but leaves the page without saving.
+  // Checks that the original customer data remains unchanged.
   test('discards an unsaved edit when the operator leaves the form', async ({ page }) => {
     const customer = {
       firstName: 'Istrosec',
@@ -212,8 +212,8 @@ test.describe('Task 1 - React Admin customer management', () => {
     );
   });
 
-  // Why: Deletion must confirm completion and remove the exact disposable record;
-  // redirecting to the list without proving absence could hide a failed mutation.
+  // Creates and deletes a customer.
+  // Searches for the customer afterward to confirm that it is gone.
   test('deletes a created customer and confirms that it is gone', async ({ page }) => {
     const customer = {
       firstName: 'Istrosec',

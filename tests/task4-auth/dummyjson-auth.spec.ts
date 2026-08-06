@@ -35,8 +35,8 @@ async function expectJsonResponse(
 }
 
 test.describe('Task 4B - DummyJSON API authentication and authorization', () => {
-  // Why: Successful authentication must return both short-lived access authority and
-  // a refresh credential; a 200 without usable tokens cannot establish a session.
+  // Logs in with valid credentials and checks the returned user data.
+  // Both access and refresh tokens must be present and different.
   test('returns non-empty access and refresh tokens for valid credentials', async ({
     request,
   }) => {
@@ -58,8 +58,8 @@ test.describe('Task 4B - DummyJSON API authentication and authorization', () => 
     expect(body.accessToken).not.toBe(body.refreshToken);
   });
 
-  // Why: Omitting the password must fail at the authentication boundary rather than
-  // falling back to username-only access that would bypass possession of a secret.
+  // Sends a login request without a password.
+  // Checks that the API rejects it with status 400 and the expected message.
   test('rejects a login request with a missing password', async ({ request }) => {
     const response = await request.post(LOGIN_URL, {
       data: { username: USERNAME },
@@ -69,8 +69,8 @@ test.describe('Task 4B - DummyJSON API authentication and authorization', () => 
     expect(body).toEqual({ message: 'Username and password required' });
   });
 
-  // Why: A wrong password must not reveal user data or mint tokens, and callers need
-  // a deterministic error response instead of a successful-looking empty object.
+  // Sends an incorrect password and checks that login fails.
+  // The error response must not contain access or refresh tokens.
   test('rejects invalid credentials without issuing tokens', async ({ request }) => {
     const response = await request.post(LOGIN_URL, {
       data: {
@@ -85,9 +85,8 @@ test.describe('Task 4B - DummyJSON API authentication and authorization', () => 
     expect(body).not.toHaveProperty('refreshToken');
   });
 
-  // Why: A bearer token must resolve to the same identity that authenticated.
-  // A separate request context proves that /auth/me accepts the header itself and
-  // is not succeeding because the login response stored an authentication cookie.
+  // Logs in, sends the access token to /auth/me and checks the returned user.
+  // A new request context confirms that authentication works through the bearer token.
   test('returns the authenticated user for a valid bearer token', async ({
     request,
   }) => {
@@ -126,8 +125,8 @@ test.describe('Task 4B - DummyJSON API authentication and authorization', () => 
     }
   });
 
-  // Why: /auth/me contains identity data and must deny anonymous callers; accepting
-  // a missing token would turn a protected identity endpoint into public data.
+  // Calls the protected /auth/me endpoint without a bearer token.
+  // Checks that the API rejects the request with status 401.
   test('returns 401 when the bearer token is missing', async ({ request }) => {
     const response = await request.get(CURRENT_USER_URL);
     const body = await expectJsonResponse(response, 401);
@@ -135,9 +134,8 @@ test.describe('Task 4B - DummyJSON API authentication and authorization', () => 
     expect(body).toEqual({ message: 'Access Token is required' });
   });
 
-  // Why: A malformed or expired token must never be treated as authority. This
-  // deterministic invalid-token case covers the assignment's invalid-or-expired
-  // boundary without introducing a fixed sleep while waiting for token expiry.
+  // Calls the protected endpoint with an invalid bearer token.
+  // Checks that the API returns status 401 and the expected error message.
   test('returns 401 for an invalid bearer token', async ({ request }) => {
     const response = await request.get(CURRENT_USER_URL, {
       headers: {
