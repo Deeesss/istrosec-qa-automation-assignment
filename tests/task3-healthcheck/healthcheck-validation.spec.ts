@@ -95,6 +95,7 @@ test.describe('Task 3 - Agent healthcheck validation', () => {
 
   // Sends a complete valid healthcheck payload.
   // Checks that the server accepts it and returns status ok.
+  // Why: A security product must accept complete agent data so the endpoint can be monitored without losing valid identity or system information.
   test('accepts a complete valid healthcheck payload', async ({ request }) => {
     const response = await postHealthcheck(request, createValidHealthcheckPayload());
     const body = await expectJsonBody(response, 200);
@@ -104,6 +105,7 @@ test.describe('Task 3 - Agent healthcheck validation', () => {
 
   // Sends several network adapters with IPv4, IPv6 and a zone-indexed IPv6 address.
   // Checks that all supported address formats are accepted.
+  // Why: Managed endpoints can use several network interfaces, and rejecting a valid address could hide part of the endpoint's network exposure.
   test('accepts multiple adapters including an IPv6 zone index', async ({ request }) => {
     const payload = createValidHealthcheckPayload({
       adapter_info: [
@@ -126,6 +128,7 @@ test.describe('Task 3 - Agent healthcheck validation', () => {
 
   // Sends multiple sessions with Active and Disconnected states.
   // Checks that both supported session states are accepted.
+  // Why: Accurate session states help the security product identify current access and distinguish active users from disconnected sessions.
   test('accepts multiple sessions with Active and Disconnected states', async ({
     request,
   }) => {
@@ -158,6 +161,7 @@ test.describe('Task 3 - Agent healthcheck validation', () => {
 
   // Removes agent_id from the payload.
   // Checks that the server rejects the missing required field.
+  // Why: Without agent_id, the backend cannot associate the healthcheck with a known enrolled endpoint.
   test('rejects a payload missing agent_id', async ({ request }) => {
     const response = await postHealthcheck(request, withoutRootField('agent_id'));
 
@@ -170,6 +174,7 @@ test.describe('Task 3 - Agent healthcheck validation', () => {
 
   // Removes computer_name from the payload.
   // Checks that the server rejects the missing required field.
+  // Why: Without a computer name, operators may be unable to identify the affected endpoint correctly in inventory and security alerts.
   test('rejects a payload missing computer_name', async ({ request }) => {
     const response = await postHealthcheck(request, withoutRootField('computer_name'));
 
@@ -182,6 +187,7 @@ test.describe('Task 3 - Agent healthcheck validation', () => {
 
   // Removes os_build from the payload.
   // Checks that the server rejects the missing required field.
+  // Why: The exact OS build is needed to assess patch level, supported versions and exposure to known vulnerabilities.
   test('rejects a payload missing os_build', async ({ request }) => {
     const response = await postHealthcheck(request, withoutRootField('os_build'));
 
@@ -194,6 +200,7 @@ test.describe('Task 3 - Agent healthcheck validation', () => {
 
   // Sends os_major as text instead of an integer.
   // Checks that the server rejects the wrong data type.
+  // Why: An OS version stored as text could break numeric comparisons used for patch and vulnerability evaluation.
   test('rejects os_major sent as a string', async ({ request }) => {
     const payload = {
       ...createValidHealthcheckPayload(),
@@ -210,6 +217,7 @@ test.describe('Task 3 - Agent healthcheck validation', () => {
 
   // Sends an invalid agent_id value.
   // Checks that the server rejects a malformed UUID.
+  // Why: A malformed agent identifier could break endpoint lookup or associate healthcheck data with an invalid identity.
   test('rejects a malformed agent_id UUID', async ({ request }) => {
     const payload = createValidHealthcheckPayload({
       agent_id: 'not-a-valid-uuid',
@@ -225,6 +233,7 @@ test.describe('Task 3 - Agent healthcheck validation', () => {
 
   // Sends agent_id with a urn:uuid prefix.
   // Checks that only the required bare UUID format is accepted.
+  // Why: Enforcing one canonical identifier format prevents the same agent from being represented by different textual identities.
   test('rejects a URN-prefixed agent_id UUID', async ({ request }) => {
     const payload = createValidHealthcheckPayload({
       agent_id: 'urn:uuid:BF5D99A1-624D-4B6D-8B1B-5D66B23D12D7',
@@ -240,6 +249,7 @@ test.describe('Task 3 - Agent healthcheck validation', () => {
 
   // Sends system_product_uuid with a urn:uuid prefix.
   // Checks that only the required bare UUID format is accepted.
+  // Why: A canonical hardware UUID prevents duplicate or inconsistent hardware identities in endpoint inventory.
   test('rejects a URN-prefixed system_product_uuid', async ({ request }) => {
     const payload = createValidHealthcheckPayload({
       system_product_uuid:
@@ -256,6 +266,7 @@ test.describe('Task 3 - Agent healthcheck validation', () => {
 
   // Sends last_boot_time with a time-zone offset instead of the required Z suffix.
   // Checks that the server rejects the timestamp format.
+  // Why: Using one UTC timestamp format keeps reboot, update and incident timelines consistent across managed endpoints.
   test('rejects last_boot_time without the required UTC Z suffix', async ({ request }) => {
     const payload = createValidHealthcheckPayload({
       last_boot_time: '2022-07-16T22:53:27+02:00',
@@ -271,6 +282,7 @@ test.describe('Task 3 - Agent healthcheck validation', () => {
 
   // Sends an empty adapter_info array.
   // Checks that at least one network adapter is required.
+  // Why: Without adapter information, the security product cannot reliably identify the endpoint's network presence or exposure.
   test('rejects an empty adapter_info array', async ({ request }) => {
     const payload = createValidHealthcheckPayload({ adapter_info: [] });
 
@@ -284,6 +296,7 @@ test.describe('Task 3 - Agent healthcheck validation', () => {
 
   // Sends an adapter without its name.
   // Checks that the missing required adapter field is rejected.
+  // Why: Without an adapter name, reported addresses cannot be reliably linked to the network interface that produced them.
   test('rejects an adapter missing its name', async ({ request }) => {
     const adapterWithoutName: Record<string, unknown> = {
       addresses: ['192.168.195.150'],
@@ -304,6 +317,7 @@ test.describe('Task 3 - Agent healthcheck validation', () => {
 
   // Sends an invalid IP address in adapter_info.
   // Checks that the server rejects the invalid address format.
+  // Why: Invalid IP addresses would corrupt endpoint inventory and could break network correlation or detection rules.
   test('rejects an invalid adapter IP address', async ({ request }) => {
     const payload = createValidHealthcheckPayload({
       adapter_info: [
@@ -324,6 +338,7 @@ test.describe('Task 3 - Agent healthcheck validation', () => {
 
   // Adds an unsupported field to the root payload.
   // Checks that extra root-level fields are rejected.
+  // Why: Unknown root fields can hide schema drift or unsupported data sent by an outdated or modified agent.
   test('rejects an extra root-level field', async ({ request }) => {
     const payload = {
       ...createValidHealthcheckPayload(),
@@ -341,6 +356,7 @@ test.describe('Task 3 - Agent healthcheck validation', () => {
 
   // Sends an unsupported agent role.
   // Checks that only the allowed role values are accepted.
+  // Why: An incorrect role could classify an endpoint wrongly and apply an unsuitable security policy.
   test('rejects an unsupported agent role', async ({ request }) => {
     const payload = {
       ...createValidHealthcheckPayload(),
@@ -357,6 +373,7 @@ test.describe('Task 3 - Agent healthcheck validation', () => {
 
   // Sends an unsupported session state.
   // Checks that only Active and Disconnected are accepted.
+  // Why: Unsupported session states could hide active access or make session-based monitoring unreliable.
   test('rejects an unsupported session state', async ({ request }) => {
     const validSession = createValidHealthcheckPayload().session_info[0];
     const payload = {
@@ -374,6 +391,7 @@ test.describe('Task 3 - Agent healthcheck validation', () => {
 
   // Sends a negative session_id.
   // Checks that session IDs must be zero or greater.
+  // Why: A negative session ID is not valid in the source system and could break correlation between users and operating-system sessions.
   test('rejects a negative session_id', async ({ request }) => {
     const validSession = createValidHealthcheckPayload().session_info[0];
     const payload = {
@@ -391,6 +409,7 @@ test.describe('Task 3 - Agent healthcheck validation', () => {
 
   // Sends an empty computer_name value.
   // Checks that the required name cannot be an empty string.
+  // Why: A blank computer name would make endpoints difficult to distinguish in inventory, alerts and incident investigation.
   test('rejects an empty required computer_name', async ({ request }) => {
     const payload = createValidHealthcheckPayload({ computer_name: '' });
 
@@ -404,6 +423,7 @@ test.describe('Task 3 - Agent healthcheck validation', () => {
 
   // Removes account_sid from a session.
   // Checks that the required session field must still be present.
+  // Why: Missing account identity data can make user-session tracking and access investigation incomplete.
   test('rejects a session missing account_sid', async ({ request }) => {
     const session: Record<string, unknown> = {
       ...createValidHealthcheckPayload().session_info[0],
@@ -425,6 +445,7 @@ test.describe('Task 3 - Agent healthcheck validation', () => {
 
   // Sends a JSON number instead of a healthcheck object.
   // Checks that the server returns the normal JSON validation error response.
+  // Why: Syntactically valid JSON must not bypass validation when it cannot contain the required agent and host information.
   test('rejects a JSON primitive through the validation error contract', async ({
     request,
   }) => {
@@ -441,6 +462,7 @@ test.describe('Task 3 - Agent healthcheck validation', () => {
 
   // Sends malformed JSON syntax.
   // Checks that the server returns a controlled JSON parse error.
+  // Why: Malformed agent data must return a controlled error without exposing an internal Express stack trace.
   test('returns a controlled JSON error for malformed JSON syntax', async ({
     request,
   }) => {

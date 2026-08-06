@@ -62,6 +62,7 @@ test.describe('Task 1 - React Admin customer management', () => {
 
   // Filters the customer list using a name already visible in the table.
   // Checks that the filter is applied and fewer customer rows are displayed.
+  // Why: Incorrect filtering could leave unrelated records visible and lead an operator to open or edit the wrong customer.
   test('filters the customer list by a visible customer name', async ({ page }) => {
     await openCustomers(page);
     const rows = customerRows(page);
@@ -88,6 +89,7 @@ test.describe('Task 1 - React Admin customer management', () => {
 
   // Sorts customer last names in ascending and descending order.
   // Checks both the selected sort settings and the displayed name order.
+  // Why: Incorrect sorting can place records in an unexpected order and cause an operator to select the wrong customer.
   test('sorts customer names in ascending and descending order', async ({ page }) => {
     await openCustomers(page);
 
@@ -124,6 +126,7 @@ test.describe('Task 1 - React Admin customer management', () => {
 
   // Opens the second page of customers.
   // Checks that the page number and displayed customer data both change.
+  // Why: Broken pagination can make operators believe they reviewed different records while the application still shows the same data.
   test('moves from the first customer page to the second data page', async ({ page }) => {
     await openCustomers(page);
     const firstPageFirstCustomer = await customerRows(page)
@@ -151,6 +154,7 @@ test.describe('Task 1 - React Admin customer management', () => {
 
   // Tries to create a customer without the required last name.
   // Checks that the form shows validation errors and is not submitted.
+  // Why: Required-field validation prevents incomplete customer records from being created and becoming difficult to identify.
   test('rejects a customer form with a missing required last name', async ({ page }) => {
     await page.goto(`${CUSTOMERS_URL}/create`);
     await page.getByRole('textbox', { name: 'First name' }).fill('Validation');
@@ -170,6 +174,7 @@ test.describe('Task 1 - React Admin customer management', () => {
 
   // Creates a new customer with valid data.
   // Checks that the saved values are displayed on the customer page.
+  // Why: After creation, the operator must be able to confirm that the intended customer data was saved correctly.
   test('creates a customer and shows the persisted form values', async ({ page }) => {
     const customer = {
       firstName: 'Istrosec',
@@ -191,6 +196,7 @@ test.describe('Task 1 - React Admin customer management', () => {
 
   // Changes a customer value but leaves the page without saving.
   // Checks that the original customer data remains unchanged.
+  // Why: Leaving the form without saving must not silently change the stored customer record.
   test('discards an unsaved edit when the operator leaves the form', async ({ page }) => {
     const customer = {
       firstName: 'Istrosec',
@@ -214,6 +220,7 @@ test.describe('Task 1 - React Admin customer management', () => {
 
   // Creates and deletes a customer.
   // Searches for the customer afterward to confirm that it is gone.
+  // Why: Deletion must remove the intended record and provide visible confirmation so stale customer data is not mistaken for an active record.
   test('deletes a created customer and confirms that it is gone', async ({ page }) => {
     const customer = {
       firstName: 'Istrosec',

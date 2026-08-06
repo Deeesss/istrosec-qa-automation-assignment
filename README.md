@@ -128,6 +128,7 @@ The Task 3 automated tests do not require a separately running mock. They start 
 |-- package.json
 |-- package-lock.json
 |-- playwright.config.ts
+|-- tsconfig.json
 `-- README.md
 ```
 

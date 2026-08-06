@@ -23,6 +23,7 @@ function inventoryList(page: Page) {
 test.describe('Task 4A - SauceDemo UI authentication', () => {
   // Logs in with valid credentials.
   // Checks that the inventory page and its content are visible.
+  // Why: Valid users must be able to authenticate and reach protected content required for their work.
   test('allows a valid user to access the protected inventory', async ({ page }) => {
     await submitLogin(page, VALID_USERNAME, VALID_PASSWORD);
 
@@ -34,6 +35,7 @@ test.describe('Task 4A - SauceDemo UI authentication', () => {
 
   // Logs in with an incorrect password.
   // Checks that login fails and the inventory is not displayed.
+  // Why: Invalid credentials must not create an authenticated session or expose protected inventory data.
   test('rejects invalid credentials without exposing protected content', async ({
     page,
   }) => {
@@ -52,6 +54,7 @@ test.describe('Task 4A - SauceDemo UI authentication', () => {
 
   // Tries to log in with a locked user.
   // Checks that the correct locked-account message is displayed.
+  // Why: A locked account must remain blocked even when the correct password is provided.
   test('denies the locked user with the locked-account message', async ({ page }) => {
     await submitLogin(page, 'locked_out_user', VALID_PASSWORD);
 
@@ -67,6 +70,7 @@ test.describe('Task 4A - SauceDemo UI authentication', () => {
 
   // Opens the inventory URL without logging in.
   // Checks that the user is returned to login and cannot see the inventory.
+  // Why: Direct navigation to a protected URL must not bypass the application's authentication checks.
   test('blocks direct anonymous access to the protected inventory URL', async ({
     page,
   }) => {
@@ -85,6 +89,7 @@ test.describe('Task 4A - SauceDemo UI authentication', () => {
 
   // Logs in and then logs out.
   // Checks that the inventory cannot be opened again after logout.
+  // Why: Logout must invalidate the existing session so protected content cannot be accessed by reusing the previous browser state.
   test('ends the session on logout and blocks a protected revisit', async ({ page }) => {
     await submitLogin(page, VALID_USERNAME, VALID_PASSWORD);
     await expect(inventoryList(page)).toBeVisible();
