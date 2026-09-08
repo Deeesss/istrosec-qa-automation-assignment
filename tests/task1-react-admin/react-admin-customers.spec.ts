@@ -1,3 +1,5 @@
+import { randomUUID } from 'node:crypto';
+
 import { expect, test, type Page } from '@playwright/test';
 
 const BASE_URL = 'https://marmelab.com/react-admin-demo/';
@@ -60,22 +62,22 @@ test.describe('Task 1 - React Admin customer management', () => {
     await login(page);
   });
 
-  // Filters the customer list using a name already visible in the table.
-  // Checks that the filter is applied and fewer customer rows are displayed.
+  // Creates a customer with a unique last name and searches for that customer.
+  // Checks that the list gets shorter and every remaining customer matches the search.
   // Why: Incorrect filtering could leave unrelated records visible and lead an operator to open or edit the wrong customer.
-  test('filters the customer list by a visible customer name', async ({ page }) => {
+  test('filters the customer list to the customer with the searched last name', async ({ page }) => {
+    const searchTerm = `Filter${randomUUID().replaceAll('-', '')}`;
+    const customer = {
+      firstName: 'Istrosec',
+      lastName: searchTerm,
+      email: `${searchTerm.toLowerCase()}@example.com`,
+    };
+    const editUrl = await createCustomer(page, customer);
     await openCustomers(page);
     const rows = customerRows(page);
     const initialRowCount = await rows.count();
-    const firstCustomerLink = rows.first().getByRole('link');
-    const visibleNameLines = (await firstCustomerLink.innerText())
-      .split('\n')
-      .map((line) => line.trim())
-      .filter(Boolean);
-    const searchTerm = visibleNameLines.at(-1) ?? '';
 
     expect(initialRowCount).toBeGreaterThan(1);
-    expect(searchTerm).not.toBe('');
     await page.getByRole('textbox', { name: 'Search' }).fill(searchTerm);
 
     await expect
@@ -85,6 +87,10 @@ test.describe('Task 1 - React Admin customer management', () => {
       page.getByRole('table').getByRole('link').filter({ hasText: searchTerm }),
     ).toBeVisible();
     await expect.poll(() => rows.count()).toBeLessThan(initialRowCount);
+    await expect(rows).toHaveCount(1);
+    await expect(rows.getByRole('link')).toContainText(searchTerm);
+    await expect(rows.getByRole('link')).toHaveAttribute('href', new URL(editUrl).hash);
+    await expect(page.getByText('1-1 of 1', { exact: true })).toBeVisible();
   });
 
   // Sorts customer last names in ascending and descending order.
@@ -173,7 +179,7 @@ test.describe('Task 1 - React Admin customer management', () => {
   });
 
   // Creates a new customer with valid data.
-  // Checks that the saved values are displayed on the customer page.
+  // Opens the saved customer again and checks that all entered values are still there.
   // Why: After creation, the operator must be able to confirm that the intended customer data was saved correctly.
   test('creates a customer and shows the persisted form values', async ({ page }) => {
     const customer = {
@@ -182,9 +188,11 @@ test.describe('Task 1 - React Admin customer management', () => {
       email: 'istrosec.created@example.com',
     };
 
-    await createCustomer(page, customer);
+    const editUrl = await createCustomer(page, customer);
 
     await expect(page.getByRole('alert')).toContainText('Customer created');
+    await openCustomers(page);
+    await page.goto(editUrl);
     await expect(page.getByRole('textbox', { name: 'First name' })).toHaveValue(
       customer.firstName,
     );
