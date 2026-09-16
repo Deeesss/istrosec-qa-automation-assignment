@@ -103,9 +103,9 @@ The Task 3 automated tests do not require a separately running mock. They start 
 | --- | --- | --- | ---: |
 | 1 | React Admin demo | Customer list filtering, sorting, and pagination; form validation, customer creation, discarding unsaved edits, and deletion | 7 |
 | 2 | JSONPlaceholder | Positive and negative GET, POST, PUT, PATCH, and DELETE behavior, including status, body, and Content-Type | 12 |
-| 3 | Local healthcheck mock | Valid payloads, required fields, types, UUIDs, UTC timestamps, adapters, IP addresses, sessions, roles, unknown root-level fields, and JSON parser errors | 22 |
+| 3 | Local healthcheck mock | Valid payloads, required fields, types, UUIDs, UTC timestamps, adapters, IP addresses, sessions, roles, unknown root-level fields, and JSON parser errors | 23 |
 | 4 | SauceDemo and DummyJSON | UI login and session protection, plus API login and bearer-token authorization | 11 |
-| **Total** |  |  | **52** |
+| **Total** |  |  | **53** |
 
 ## Repository structure
 

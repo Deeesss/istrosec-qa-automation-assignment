@@ -280,6 +280,25 @@ test.describe('Task 3 - Agent healthcheck validation', () => {
     });
   });
 
+  // Sends last_boot_time with month 13, which is not a real calendar date.
+  // Checks that the server rejects a value that is not a valid ISO 8601 date-time.
+  // Why: An impossible boot time cannot be placed on the endpoint's timeline, so reboot and incident analysis would rely on corrupted data.
+  test('rejects last_boot_time that is not a valid ISO 8601 date-time', async ({
+    request,
+  }) => {
+    const payload = createValidHealthcheckPayload({
+      last_boot_time: '2022-13-16T20:53:27Z',
+    });
+
+    const response = await postHealthcheck(request, payload);
+
+    await expectValidationError(response, {
+      instancePath: '/last_boot_time',
+      keyword: 'format',
+      params: { format: 'date-time' },
+    });
+  });
+
   // Sends an empty adapter_info array.
   // Checks that at least one network adapter is required.
   // Why: Without adapter information, the security product cannot reliably identify the endpoint's network presence or exposure.
