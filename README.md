@@ -135,7 +135,7 @@ The Task 3 automated tests do not require a separately running mock. They start 
 ## Technical decisions
 
 - The solution stays inside Playwright and TypeScript. Express and AJV are used only for the local validation mock required by Task 3.
-- Tests run with one Chromium worker and no retries. Several public demo systems expose shared or mutable data, so serial execution is easier to reason about than parallel mutation.
+- Tests run with one Chromium worker and no retries. The suite depends on public third-party demo services, so it keeps their load low and the output in a readable order, and every failure is reported on its first occurrence instead of being hidden by a retry.
 - UI tests use roles, labels, placeholders, visible names, and stable `data-test` attributes. They do not use fixed sleeps.
 - API tests verify response status, Content-Type, and relevant response data. A successful status alone is not treated as proof of correct behavior.
 - The healthcheck tests start the mock on an available port and always close it. Manual operation remains available through `npm run mock`.
@@ -153,7 +153,7 @@ The Task 3 automated tests do not require a separately running mock. They start 
 
 ## Improvements with more time
 
-- Isolate mutable UI data behind dedicated test accounts or controlled local fixtures instead of shared public demos.
+- Replace the public demo systems with controlled local fixtures or a dedicated test environment, so changes in external systems cannot fail the suite.
 - Add Firefox and WebKit after verifying that the target applications support those browsers.
 - Introduce small page objects only if the UI suite grows enough for them to remove meaningful duplication.
 - Add scheduled checks for changes in the external demo systems.
