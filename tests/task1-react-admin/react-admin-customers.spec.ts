@@ -95,7 +95,7 @@ test.describe('Task 1 - React Admin customer management', () => {
 
   // Sorts customer last names in ascending and descending order.
   // Checks the selected sort direction and the order of the displayed last names.
-  // Why: Incorrect sorting can place records in an unexpected order and cause an operator to select the wrong customer.
+  // Why: Incorrect sorting can show records in an unexpected order and cause an operator to select the wrong customer.
   test('sorts customer names in ascending and descending order', async ({ page }) => {
     await openCustomers(page);
 
