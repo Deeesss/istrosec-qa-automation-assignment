@@ -227,7 +227,7 @@ test.describe('Task 1 - React Admin customer management', () => {
   });
 
   // Creates and deletes a customer.
-  // Searches for the customer afterward to confirm that it is gone.
+  // Confirms that search finds the customer before deletion and no longer finds it afterward.
   // Why: Deletion must remove the intended record and provide visible confirmation so stale customer data is not mistaken for an active record.
   test('deletes a created customer and confirms that it is gone', async ({ page }) => {
     const customer = {
@@ -236,19 +236,26 @@ test.describe('Task 1 - React Admin customer management', () => {
       email: 'istrosec.disposable@example.com',
     };
     const fullName = `${customer.firstName} ${customer.lastName}`;
-    await createCustomer(page, customer);
+    const customerLink = page.getByRole('table').getByRole('link').filter({ hasText: fullName });
+    const editUrl = await createCustomer(page, customer);
 
+    await openCustomers(page);
+    await page.getByRole('textbox', { name: 'Search' }).fill(fullName);
+    await expect
+      .poll(() => listParameters(page).get('filter'))
+      .toBe(JSON.stringify({ q: fullName }));
+    await expect(customerLink).toHaveCount(1);
+
+    await page.goto(editUrl);
     await page.getByRole('button', { name: 'Delete' }).click();
 
     await expect(page).toHaveURL(/#\/customers(?:\?|$)/);
     await expect(page.getByRole('alert')).toContainText('Customer deleted');
     await expect(page.getByRole('alert')).toBeHidden({ timeout: 10_000 });
-    await page.getByRole('textbox', { name: 'Search' }).fill(fullName);
-    await expect
-      .poll(() => listParameters(page).get('filter'))
-      .toBe(JSON.stringify({ q: fullName }));
-    await expect(page.getByRole('table').getByText(fullName, { exact: true })).toHaveCount(0, {
-      timeout: 10_000,
-    });
+    await page.goto(
+      `${CUSTOMERS_URL}?filter=${encodeURIComponent(JSON.stringify({ q: fullName }))}`,
+    );
+    await expect(page.getByRole('textbox', { name: 'Search' })).toHaveValue(fullName);
+    await expect(customerLink).toHaveCount(0, { timeout: 10_000 });
   });
 });
