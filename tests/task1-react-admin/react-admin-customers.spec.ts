@@ -202,7 +202,7 @@ test.describe('Task 1 - React Admin customer management', () => {
     await expect(page.getByRole('textbox', { name: 'Email' })).toHaveValue(customer.email);
   });
 
-  // Changes a customer value but leaves the page without saving.
+  // The test changes one customer value and leaves the page without saving.
   // Checks that the original customer data remains unchanged.
   // Why: Leaving the form without saving must not silently change the stored customer record.
   test('discards an unsaved edit when the operator leaves the form', async ({ page }) => {
