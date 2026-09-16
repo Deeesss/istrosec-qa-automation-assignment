@@ -131,7 +131,7 @@ test.describe('Task 1 - React Admin customer management', () => {
   });
 
   // Opens the second page of the customer list.
-  // Checks that the page number and displayed customer data both change.
+  // Checks that page 2 is open and its first customer differs from page 1.
   // Why: Broken pagination can make operators believe they reviewed different records while the application still shows the same data.
   test('moves from the first customer page to the second data page', async ({ page }) => {
     await openCustomers(page);
