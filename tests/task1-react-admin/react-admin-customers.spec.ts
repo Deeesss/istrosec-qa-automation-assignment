@@ -49,8 +49,8 @@ async function visibleLastNames(page: Page): Promise<string[]> {
   const names: string[] = [];
 
   for (let index = 0; index < (await rows.count()); index += 1) {
-    const nameCell = rows.nth(index).getByRole('cell').nth(1);
-    const tokens = (await nameCell.innerText()).trim().split(/\s+/);
+    const nameLink = rows.nth(index).getByRole('link');
+    const tokens = (await nameLink.innerText()).trim().split(/\s+/);
     names.push(tokens.at(-1) ?? '');
   }
 
