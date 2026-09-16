@@ -95,7 +95,7 @@ test.describe('Task 4A - SauceDemo UI authentication', () => {
     await expect(inventoryList(page)).toBeVisible();
 
     await page.getByRole('button', { name: 'Open Menu' }).click();
-    await page.getByRole('link', { name: 'Logout' }).click();
+    await page.locator('[data-test="logout-sidebar-link"]').click();
 
     await expect(page).toHaveURL(BASE_URL);
     await expect(page.getByRole('button', { name: 'Login' })).toBeVisible();
