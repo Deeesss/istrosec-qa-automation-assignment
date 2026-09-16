@@ -147,6 +147,7 @@ The Task 3 automated tests do not require a separately running mock. They start 
 - The current React Admin demo has no explicit Cancel button on the customer form. The test changes a field, leaves without saving, reopens the record, and verifies that the stored value did not change.
 - The current React Admin demo does not show a confirmation dialog before customer deletion. It deletes the record immediately and provides an Undo action in the notification. The test waits for the notification to close and verifies that the exact disposable record is no longer present.
 - JSONPlaceholder is a fake API. POST, PUT, PATCH, and DELETE responses simulate writes but do not prove database persistence. The tests verify its observed public behavior, including responses for unknown identifiers.
+- Since [saucelabs/sample-app-web#175](https://github.com/saucelabs/sample-app-web/pull/175) (2026-09-10), SauceDemo exposes the sidebar Logout control as a button instead of a link. The logout test selects it through the `data-test="logout-sidebar-link"` attribute, so it does not depend on the control's accessible role. The failure analysis is in [#7](https://github.com/Deeesss/istrosec-qa-automation-assignment/pull/7).
 - React Admin, JSONPlaceholder, SauceDemo, and DummyJSON are external demo systems. Their availability, datasets, messages, and undocumented behavior can change independently of this repository.
 - Chromium is the only configured browser project.
 
