@@ -49,7 +49,7 @@ test.describe('Task 2 - JSONPlaceholder CRUD API', () => {
     });
 
     // Gets an existing post by ID.
-    // Checks the ID, title and body in the response.
+    // Checks the post ID, that userId is a number, and that title and body are not empty.
     // Why: Returning the wrong post for an ID could make a client display or modify unrelated data.
     test('returns one existing post by identifier', async ({ request }) => {
       const response = await request.get(`${POSTS_URL}/${EXISTING_POST_ID}`);
